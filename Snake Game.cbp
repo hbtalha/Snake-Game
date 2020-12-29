@@ -30,6 +30,7 @@
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-lncurses" />
 				</Linker>
 			</Target>
 		</Build>
@@ -38,6 +39,7 @@
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Linker>
+			<Add option="-lncurses" />
 			<Add directory="D:/Desktop/lib" />
 		</Linker>
 		<Unit filename="Player.cpp" />
