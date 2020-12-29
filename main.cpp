@@ -33,7 +33,5 @@ int main()
     }
     while ( ! exit);
 
-    endwin();
-
     return 0;
 }
