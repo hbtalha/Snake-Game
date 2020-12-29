@@ -10,13 +10,14 @@ class Player
     int nTail;
     int xLoc, yLoc, xMax, yMax;
     char snake_head, snake_food;
-    WINDOW *curwin;
+    WINDOW *playwin;
     bool game_over, exit_game;
     int snake_speed;
     int score;
 
 public:
-    void setup(WINDOW *win, int y, int x, char c);
+    void setup();
+    void startNewGame();
 
     void mvup();
     void mvdown();
@@ -30,7 +31,7 @@ public:
     enum eDirection {STOP = 0, RIGHT, LEFT, UP, DOWN};
     eDirection dir;
 
-    int getScore();
+    void printScore();
     int getSpeed();
     void checkSpeed();
     bool isOver();

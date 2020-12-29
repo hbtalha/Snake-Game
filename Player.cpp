@@ -8,24 +8,40 @@
 //using namespace wrap;
 using std::string;
 
-void Player::setup(WINDOW *win, int y, int x, char c)
+void Player::setup()
 {
     srand(time(nullptr));
-    curwin = win;
-    yLoc = y;
-    xLoc = x;
-    snake_head = c;
-    getmaxyx(curwin, yMax, xMax);
 
-    int xr_max = xMax - 2; // x random max
-    int yr_max = yMax - 2; // y random max
+    initscr();
+    noecho();
+    cbreak();
+
+    getmaxyx(stdscr, yMax, xMax);
+
+    playwin = newwin(yMax - 3, xMax - 20, 1, 7);
+    box(playwin, 0, 0);
+    refresh();
+    wrefresh(playwin);
+
+    getmaxyx(playwin, yMax, xMax);
+
+    keypad(playwin, true);
+    nodelay(playwin, true);
+
+    curs_set(0); // make the blinking cursor invisible
+}
+
+void Player::startNewGame()
+{
+    yLoc = yMax/2;
+    xLoc = xMax/2;
+    snake_head = 'o';
+
     int r_min = 1;
 
-    yFood = rand() % yr_max + r_min;
-    xFood = rand() % xr_max + r_min;
+    yFood = rand() % (yMax - 2) + r_min;
+    xFood = rand() % (xMax - 2) + r_min;
 
-    keypad(curwin, true);
-    nodelay(curwin, true);
     nTail = 0;
     dir = STOP;
 
@@ -46,9 +62,19 @@ bool Player::isOver()
     return game_over;
 }
 
-int Player::getScore()
+void Player::printScore()
 {
-    return score;
+  // comment out this line and play until the score is 100 and
+    // then lose the game to start again and you will see in the
+    // score the reason for the line below
+    mvprintw(2, xMax + 7, "Score:        ");
+
+    mvprintw(2, xMax + 7, "Score: %d", score);
+    mvprintw(4, xMax + 7, "p/P -> Pause");
+    mvprintw(6, xMax + 7, "q/Q -> Quit");
+
+    refresh();
+
 }
 
 void Player::checkSpeed()
@@ -76,7 +102,7 @@ void Player::checkSpeed()
 void Player::mvup()
 {
     // if (!game_over) // if the snake hits the wall or eats its its own body the head will keep showing up
-    mvwaddch(curwin, yLoc, xLoc, ' ');
+    mvwaddch(playwin, yLoc, xLoc, ' ');
     --yLoc;
 
 //   if (yLoc < 1)
@@ -85,7 +111,7 @@ void Player::mvup()
 
 void Player::mvdown()
 {
-    mvwaddch(curwin, yLoc, xLoc, ' ');
+    mvwaddch(playwin, yLoc, xLoc, ' ');
     ++yLoc;
 
     //  if (yLoc > (yMax - 2))
@@ -94,7 +120,7 @@ void Player::mvdown()
 
 void Player::mvright()
 {
-    mvwaddch(curwin, yLoc, xLoc, ' ');
+    mvwaddch(playwin, yLoc, xLoc, ' ');
     ++xLoc;
 
     //  if (xLoc > (xMax - 2))
@@ -103,7 +129,7 @@ void Player::mvright()
 
 void Player::mvleft()
 {
-    mvwaddch(curwin, yLoc, xLoc, ' ');
+    mvwaddch(playwin, yLoc, xLoc, ' ');
     --xLoc;
 
     // if (xLoc < 1)
@@ -112,7 +138,7 @@ void Player::mvleft()
 
 void Player::getmv()
 {
-    int choice = wgetch(curwin);
+    int choice = wgetch(playwin);
 
     switch(choice)
     {
@@ -138,7 +164,7 @@ void Player::getmv()
             dir = RIGHT;
         break;
 
-    case 50: // number pad
+    case 50: // number pad 2
     case 's':
     case KEY_DOWN:
         if (nTail == 0)
@@ -163,19 +189,19 @@ void Player::getmv()
     case ' ':
     case 'P':
     case 'p':
-        wattron(curwin, A_REVERSE);
-        mvwprintw(curwin, yMax/2 - 5, xMax/2 - 6, " PAUSE ");
-        wattroff(curwin, A_REVERSE);
-        nodelay(curwin, false);
+        wattron(playwin, A_REVERSE);
+        mvwprintw(playwin, yMax/2 - 5, xMax/2 - 6, " PAUSE ");
+        wattroff(playwin, A_REVERSE);
+        nodelay(playwin, false);
 
         char c;
         do
         {
-            c = wgetch(curwin);
+            c = wgetch(playwin);
         }
         while (c != 'p' && c != 'P' && c != ' ');
 
-        nodelay(curwin, true);
+        nodelay(playwin, true);
         break;
 
     case 'q':
@@ -265,24 +291,26 @@ void Player::moving()
 
 void Player::display()
 {
-    werase(curwin);
-    box(curwin, 0, 0);
+    werase(playwin);
+    box(playwin, 0, 0);
 
-    mvwaddch(curwin, yLoc, xLoc, snake_head);
-    mvwaddch(curwin, yFood, xFood, '*');
+    mvwaddch(playwin, yLoc, xLoc, snake_head);
+    mvwaddch(playwin, yFood, xFood, '*');
 
     for (int x = 0; x < nTail; ++x)
     {
-        mvwaddch(curwin, yTail[ x ], xTail[ x ], 'o');
+        mvwaddch(playwin, yTail[ x ], xTail[ x ], 'o');
     }
+
+    wrefresh(playwin);
 }
 
 void Player::quit()
 {
-    wattron(curwin, A_BOLD);
-    mvwprintw(curwin, yMax/2 - 5, xMax/2 - 6, "---Quit---");
-    wattroff(curwin, A_BOLD);
-    nodelay(curwin, false);
+    wattron(playwin, A_BOLD);
+    mvwprintw(playwin, yMax/2 - 5, xMax/2 - 6, "---Quit---");
+    wattroff(playwin, A_BOLD);
+    nodelay(playwin, false);
 
     string choices [] = {" Yes ", " No "};
     int choice;
@@ -294,16 +322,16 @@ void Player::quit()
 
         for(int i = 0; i < len; ++i)
         {
-            mvwprintw(curwin, yMax/2 - 3 + i, xMax/2 - 6, "->  " );
+            mvwprintw(playwin, yMax/2 - 3 + i, xMax/2 - 6, "->  " );
 
             if(i == selected)
-                wattron(curwin, A_REVERSE);
+                wattron(playwin, A_REVERSE);
 
-            mvwprintw(curwin, yMax/2 - 3 + i, xMax/2 - 3, choices[ i ].c_str() );
-            wattroff(curwin, A_REVERSE);
+            mvwprintw(playwin, yMax/2 - 3 + i, xMax/2 - 3, choices[ i ].c_str() );
+            wattroff(playwin, A_REVERSE);
         }
 
-        choice = wgetch(curwin);
+        choice = wgetch(playwin);
 
         if(choice == 10 || choice == ' ')
             break;
@@ -329,18 +357,16 @@ void Player::quit()
     if (selected == 1)
         game_over = true;
 
-    nodelay(curwin, true);
+    nodelay(playwin, true);
 }
 
 void Player::playAgain(bool& exit)
 {
     Sleep(100);
 
-    keypad(curwin, true);
-
-    wattron(curwin, A_BOLD);
-    mvwprintw(curwin, yMax/2 - 5, xMax/2 - 6, "GAME OVER");
-    wattroff(curwin, A_BOLD);
+    wattron(playwin, A_BOLD);
+    mvwprintw(playwin, yMax/2 - 5, xMax/2 - 6, "GAME OVER");
+    wattroff(playwin, A_BOLD);
 
     string choices [] = {" -Play Again ", " -Exit       "};
     int choice;
@@ -351,13 +377,13 @@ void Player::playAgain(bool& exit)
         for (int i = 0; i < 2; ++i)
         {
             if(i == selected)
-                wattron(curwin, A_REVERSE);
+                wattron(playwin, A_REVERSE);
 
-            mvwprintw(curwin, yMax/2 - 4 + i + 1, xMax/2 - 8, choices[i].c_str());
-            wattroff(curwin, A_REVERSE);
+            mvwprintw(playwin, yMax/2 - 4 + i + 1, xMax/2 - 8, choices[i].c_str());
+            wattroff(playwin, A_REVERSE);
         }
 
-        choice = wgetch(curwin);
+        choice = wgetch(playwin);
 
         if(choice == 10 || choice == ' ')
             break;
