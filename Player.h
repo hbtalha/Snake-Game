@@ -36,6 +36,11 @@ public:
     void checkSpeed();
     bool isOver();
     void playAgain(bool& exit);
+
+    ~Player()
+    {
+        endwin();
+    }
 };
 
 
