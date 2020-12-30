@@ -354,7 +354,7 @@ void Player::quit()
         }
     }
 
-    if (selected == 1)
+    if (selected == 0)
         game_over = true;
 
     nodelay(playwin, true);
